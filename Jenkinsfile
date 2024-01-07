@@ -1,48 +1,48 @@
 pipeline {
     agent any
 
-    environment {
-        // Define variables de entorno si es necesario
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub_credentials')
-    }
-
     stages {
-        stage('Build Image') {
+        stage('Build') {
             steps {
                 script {
-                    // Construir la imagen Docker
-                    def dockerImage = docker.build("testingovalada/realtime_ping:latest")
+                    echo 'Construyendo el proyecto...'
+                    // Ejemplo: Construir con Maven
+                    sh 'mvn clean install'
                 }
             }
         }
 
-        stage('Run Container') {
+        stage('Test') {
             steps {
                 script {
-                    // Ejecutar el contenedor Docker
-                    def container = dockerImage.run('-p 4000:8080 --name realtime-ping -d')
+                    echo 'Ejecutando pruebas...'
+                    // Ejemplo: Ejecutar pruebas con Maven
+                    sh 'mvn test'
                 }
             }
         }
 
-        stage('Push to Dockerhub') {
+        stage('Deploy') {
             steps {
                 script {
-                    // Subir la imagen a Dockerhub
-                    docker.withRegistry('https://registry.hub.docker.com', DOCKERHUB_CREDENTIALS) {
-                        dockerImage.push()
-                    }
+                    echo 'Desplegando la aplicación...'
+                    // Aquí puedes agregar tus propios comandos de implementación
+                    // Ejemplo: Desplegar en un servidor de aplicaciones
+                    sh 'deploy-script.sh'
                 }
             }
         }
     }
 
     post {
-        always {
-            // Detener y eliminar el contenedor después de la ejecución
+        success {
             script {
-                container.stop()
-                container.remove()
+                echo 'El pipeline se ejecutó con éxito. ¡Enhorabuena!'
+            }
+        }
+        failure {
+            script {
+                echo 'El pipeline falló. Por favor, revisa los registros y corrige los problemas.'
             }
         }
     }
