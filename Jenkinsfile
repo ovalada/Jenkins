@@ -1,60 +1,67 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('89ee9b37-bcac-4f17-bd9a-1d41dda8525b')
-        DOCKER_IMAGE_NAME = 'testingovalada/realtime_ping:latest'
-    }
-
     stages {
-        stage('Checkout SCM') {
+        stage('Preparation') {
             steps {
                 script {
-                    checkout scm
-                }
-            }
-        }
-
-        stage('Build Image') {
-            steps {
-                script {
-                    // Puedes agregar pasos adicionales para construir tu imagen si es necesario
-                    echo 'Building Docker image...'
-                    sh 'docker build -t $DOCKER_IMAGE_NAME .'
-                }
-            }
-        }
-
-        stage('Run Container') {
-            steps {
-                script {
-                    // Puedes agregar pasos adicionales para ejecutar tu contenedor si es necesario
-                    echo 'Running Docker container...'
-                    sh 'docker run -d $DOCKER_IMAGE_NAME'
-                }
-            }
-        }
-
-        stage('Push to Dockerhub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: '89ee9b37-bcac-4f17-bd9a-1d41dda8525b', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
-                        echo 'Pushing Docker image to Docker Hub...'
-                        sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
-                        sh 'docker push $DOCKER_IMAGE_NAME'
+                    // Instalar Docker si no está presente
+                    def dockerInstallation = tool 'docker'
+                    if (dockerInstallation == null) {
+                        echo 'Docker no está instalado. Instalando...'
+                        def installer = getDockerInstaller()
+                        installer.install()
+                        echo 'Docker instalado exitosamente.'
+                    } else {
+                        echo 'Docker ya está instalado.'
                     }
                 }
             }
         }
+
+        // Resto del pipeline...
+    }
+    
+    // Post-actions...
+}
+
+def getDockerInstaller() {
+    // Puedes ajustar la versión según tus necesidades
+    def version = '20.10.9'
+    def installer = new DockerInstaller(version)
+    return installer
+}
+
+class DockerInstaller {
+    def version
+
+    DockerInstaller(version) {
+        this.version = version
     }
 
-    post {
-        always {
-            script {
-                // Este bloque siempre se ejecutará al finalizar el pipeline
-                echo 'Cleaning up...'
-                sh 'docker rmi $DOCKER_IMAGE_NAME'
+    def install() {
+        // Instalación de Docker según la plataforma
+        script {
+            if (isUnix()) {
+                sh "curl -fsSL https://get.docker.com -o get-docker.sh"
+                sh "sh get-docker.sh"
+            } else {
+                bat "curl -fsSL https://get.docker.com -o get-docker.cmd"
+                bat "call get-docker.cmd"
             }
         }
     }
+}
+
+def isUnix() {
+    return !isWindows()
+}
+
+def isWindows() {
+    return (isAnyOf('windows', 'win32', 'win64', 'cygwin'))
+}
+
+def isAnyOf(...candidates) {
+    def current = System.properties['os.name'].toLowerCase()
+    return candidates.any { candidate -> current.contains(candidate) }
 }
