@@ -1,49 +1,32 @@
-def buildImage() {
-    stage('Build Image') {
-        steps {
-            script {
-                docker.build("testingovalada/realtime_ping:latest")
+pipeline {
+    agent any
+    stages {
+        stage('Build Image') {
+            steps {
+                script {
+                    buildImage()
+                }
             }
         }
-    }
-}
-
-def runContainer() {
-    stage('Run Container') {
-        steps {
-            script {
-                docker.image("testingovalada/realtime_ping:latest").run('-p 4000:8080 --name realtime-ping -d')
+        stage('Run Container') {
+            steps {
+                script {
+                    runContainer()
+                }
             }
         }
-    }
-}
-
-def pushImage() {
-    stage('Push Image to DockerHub') {
-        steps {
-            script {
-                docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
-                    docker.image("testingovalada/realtime_ping:latest").push()
+        stage('Push Image to DockerHub') {
+            steps {
+                script {
+                    pushImage()
                 }
             }
         }
     }
-}
-
-pipeline {
-    agent any
-
-    stages {
-        buildImage()
-        runContainer()
-        pushImage()
-    }
-
     post {
         always {
             script {
-                docker.image("testingovalada/realtime_ping:latest").stop()
-                docker.image("testingovalada/realtime_ping:latest").remove()
+                // Realiza acciones de limpieza después de la ejecución
             }
         }
     }
