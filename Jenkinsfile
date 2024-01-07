@@ -1,33 +1,30 @@
 pipeline {
     agent any
-    stages {
+      stages {
         stage('Build Image') {
-            steps {
-                script {
-                    buildImage()
-                }
-            }
-        }
-        stage('Run Container') {
-            steps {
-                script {
-                    runContainer()
-                }
-            }
-        }
-        stage('Push Image to DockerHub') {
-            steps {
-                script {
-                    pushImage()
-                }
-            }
-        }
-    }
-    post {
-        always {
+          steps {
             script {
-                // Realiza acciones de limpieza después de la ejecución
+              docker.build("testingovalada/realtime_ping:latest")
             }
+          }
         }
+
+        stage('Run Container') {
+          steps {
+            script {
+              docker.image("testingovalada/realtime_ping:latest").run()
+            }
+          }
+        }
+
+        stage('Push to Dockerhub') {
+          steps {
+            script {
+              docker.withRegistry('https://registry.hub.docker.com', 'dockerhub_credentials') {
+                docker.image("testingovalada/realtime_ping:latest").push()
+              }
+            }
+          }
+        }
+      }
     }
-}
