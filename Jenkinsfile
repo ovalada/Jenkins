@@ -1,3 +1,5 @@
+def docker
+
 pipeline {
     agent any
 
@@ -7,16 +9,18 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                checkout scm
+                script {
+                    docker = docker.build(DOCKER_IMAGE_NAME)
+                }
             }
         }
 
         stage('Build Image') {
             steps {
                 script {
-                    docker.build(DOCKER_IMAGE_NAME)
+                    // Puedes agregar pasos adicionales para construir tu imagen si es necesario
                 }
             }
         }
@@ -24,7 +28,7 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    docker.image(DOCKER_IMAGE_NAME).run('-p 4000:8080 --name realtime-ping -d')
+                    // Puedes agregar pasos adicionales para ejecutar tu contenedor si es necesario
                 }
             }
         }
@@ -33,7 +37,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', DOCKERHUB_CREDENTIALS) {
-                        docker.image(DOCKER_IMAGE_NAME).push()
+                        docker.image.push()
                     }
                 }
             }
@@ -43,8 +47,8 @@ pipeline {
     post {
         always {
             script {
-                docker.image(DOCKER_IMAGE_NAME).stop()
-                docker.image(DOCKER_IMAGE_NAME).remove()
+                // Este bloque siempre se ejecutará al finalizar el pipeline
+                docker.image.remove() // Elimina la imagen después de empujarla al Docker Hub
             }
         }
     }
