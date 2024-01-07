@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         // Define variables de entorno si es necesario
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub_credentials')
     }
 
     stages {
@@ -28,7 +29,7 @@ pipeline {
             steps {
                 script {
                     // Subir la imagen a Dockerhub
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub_credentials') {
+                    docker.withRegistry('https://registry.hub.docker.com', DOCKERHUB_CREDENTIALS) {
                         dockerImage.push()
                     }
                 }
