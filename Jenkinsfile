@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        dockerImage = "testingovalada/realtime_ping:${env.BUILD_ID}"
+        DOCKER_IMAGE = "testingovalada/realtime_ping:${env.BUILD_ID}"
     }
 
     stages {
@@ -11,7 +11,7 @@ pipeline {
                 script {
                     // Construye la imagen
                     echo 'Construyendo la imagen Docker...'
-                    sh "docker build -t $dockerImage ."
+                    sh "docker build -t $DOCKER_IMAGE ."
                 }
             }
         }
@@ -21,7 +21,7 @@ pipeline {
                 script {
                     // Ejecuta el contenedor
                     echo 'Ejecutando el contenedor Docker...'
-                    sh "docker run -d --name realtime_ping $dockerImage"
+                    sh "docker run -d --name realtime_ping $DOCKER_IMAGE"
                 }
             }
         }
@@ -29,9 +29,9 @@ pipeline {
         stage('Push to Dockerhub') {
             steps {
                 script {
-                    // Empuja la imagen a Docker
+                    // Empuja la imagen a Docker Hub
                     echo 'Empujando la imagen a Docker Hub...'
-                    sh "docker push $dockerImage"
+                    sh "docker push $DOCKER_IMAGE"
                 }
             }
         }
@@ -39,11 +39,11 @@ pipeline {
 
     post {
         always {
-            // Limpia despues de terminar el pipeline
+            // Limpia después de terminar el pipeline
             echo 'Limpiando...'
             sh "docker stop realtime_ping || true"
             sh "docker rm realtime_ping || true"
-            sh "docker rmi $dockerImage"
+            sh "docker rmi $DOCKER_IMAGE"
         }
     }
 }
