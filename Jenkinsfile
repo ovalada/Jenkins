@@ -1,17 +1,23 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_HOME = tool 'docker'
+    }
+
     stages {
         stage('Preparation') {
             steps {
                 script {
-                    // Instalar Docker si no está presente
-                    def dockerInstallation = tool 'docker'
-                    if (dockerInstallation == null) {
+                    // Verificar si Docker está instalado
+                    if (DOCKER_HOME == null) {
                         echo 'Docker no está instalado. Instalando...'
-                        def installer = getDockerInstaller()
+                        def installer = new DockerInstaller('20.10.9')
                         installer.install()
                         echo 'Docker instalado exitosamente.'
+                        
+                        // Configurar la variable de entorno DOCKER_HOME
+                        DOCKER_HOME = tool 'docker'
                     } else {
                         echo 'Docker ya está instalado.'
                     }
@@ -19,17 +25,35 @@ pipeline {
             }
         }
 
-        // Resto del pipeline...
-    }
-    
-    // Post-actions...
-}
+        stage('Build Image') {
+            steps {
+                script {
+                    // Asegurarse de que DOCKER_HOME esté configurado
+                    if (DOCKER_HOME == null) {
+                        error 'Docker no está instalado. Deteniendo el pipeline.'
+                    }
 
-def getDockerInstaller() {
-    // Puedes ajustar la versión según tus necesidades
-    def version = '20.10.9'
-    def installer = new DockerInstaller(version)
-    return installer
+                    // Resto de las acciones para construir la imagen Docker...
+                    echo 'Construyendo la imagen Docker...'
+                    sh "${DOCKER_HOME}/bin/docker build -t testingovalada/realtime_ping:latest ."
+                }
+            }
+        }
+
+        // Agregar más etapas según sea necesario...
+
+        stage('Cleanup') {
+            steps {
+                script {
+                    // Limpiar después de completar el pipeline...
+                    echo 'Limpiando...'
+                    sh "${DOCKER_HOME}/bin/docker rmi testingovalada/realtime_ping:latest"
+                }
+            }
+        }
+    }
+
+    // Post-actions...
 }
 
 class DockerInstaller {
@@ -40,7 +64,6 @@ class DockerInstaller {
     }
 
     def install() {
-        // Instalación de Docker según la plataforma
         script {
             if (isUnix()) {
                 sh "curl -fsSL https://get.docker.com -o get-docker.sh"
