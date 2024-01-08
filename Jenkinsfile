@@ -11,7 +11,7 @@ pipeline {
                 script {
                     // Construir la imagen Docker
                     echo 'Construyendo la imagen Docker...'
-                    sh "docker build -t $dockerImage ."
+                    sh "sudo docker build -t $dockerImage ."
                 }
             }
         }
@@ -21,7 +21,7 @@ pipeline {
                 script {
                     // Ejecutar el contenedor Docker
                     echo 'Ejecutando el contenedor Docker...'
-                    sh "docker run -d --name realtime_ping $dockerImage"
+                    sh "sudo docker run -d --name realtime_ping $dockerImage"
                 }
             }
         }
@@ -31,7 +31,7 @@ pipeline {
                 script {
                     // Empujar la imagen a Docker Hub
                     echo 'Empujando la imagen a Docker Hub...'
-                    sh "docker push $dockerImage"
+                    sh "sudo docker push $dockerImage"
                 }
             }
         }
@@ -41,9 +41,9 @@ pipeline {
         always {
             // Limpiar después de completar el pipeline
             echo 'Limpiando...'
-            sh "docker stop realtime_ping || true"
-            sh "docker rm realtime_ping || true"
-            sh "docker rmi $dockerImage"
+            sh "sudo docker stop realtime_ping || true"
+            sh "sudo docker rm realtime_ping || true"
+            sh "sudo docker rmi $dockerImage"
         }
     }
 }
