@@ -26,18 +26,20 @@ pipeline {
             }
         }
 
-stage('Push to Dockerhub') {
-    steps {
-        script {
-            // Empuja la imagen a Docker Hub
-            echo 'Empujando la imagen a Docker Hub...'
-            withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
-                sh "docker push $DOCKER_IMAGE"
+        stage('Push to Dockerhub') {
+            steps {
+                script {
+                    // Empuja la imagen a Docker Hub
+                    echo 'Empujando la imagen a Docker Hub...'
+                    withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+                        sh "docker push $DOCKER_IMAGE"
+                    }
+                }
             }
         }
     }
-}
+
     post {
         always {
             // Limpia después de terminar el pipeline
